@@ -1,0 +1,16 @@
+/_build/
+/cover/
+/deps/
+/doc/
+/.fetch
+erl_crash.dump
+*.ez
+*.beam
+*.tar
+/config/*.secret.exs
+.elixir_ls/
+.lexical/
+.claude/
+
+# Reference paper — copyrighted, don't redistribute
+hayashibara-phi-accrual-failure-detector-2004.pdf
