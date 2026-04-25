@@ -10,7 +10,10 @@ erl_crash.dump
 /config/*.secret.exs
 .elixir_ls/
 .lexical/
-.claude/
 
 # Reference paper — copyrighted, don't redistribute
 hayashibara-phi-accrual-failure-detector-2004.pdf
+
+# Claude Code config (symlinked to private claude-files repo, never committed here)
+.claude
+CLAUDE.md
