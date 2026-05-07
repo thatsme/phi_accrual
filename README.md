@@ -189,6 +189,8 @@ Event names, measurement keys, and metadata keys are a contract.
   measurements: %{phi, elapsed_ms}
   metadata:     %{node, state, local_pause?, confidence}
     # state ∈ [:steady, :recovering, :insufficient_data, :stale]
+    # phi is 0.0 when state is :insufficient_data or :stale; consumers
+    # should filter on state if they want to graph only meaningful values.
 
 [:phi_accrual, :local_pause, :start]             # rising edge
   metadata:     %{kind}                          # :long_gc | :long_schedule | :busy_dist_port

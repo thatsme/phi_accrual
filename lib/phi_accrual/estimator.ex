@@ -13,6 +13,10 @@ defmodule PhiAccrual.Estimator do
   emits a `[:phi_accrual, :phi, :computed]` telemetry event carrying
   the current φ and state classification. Set `phi_tick_ms: nil` to
   disable the gauge stream; consumers can still poll `phi/1` directly.
+
+  `phi` is `0.0` when state is `:insufficient_data` or `:stale`;
+  consumers should filter on `state` if they want to graph only
+  meaningful values.
   """
 
   use GenServer
@@ -156,21 +160,15 @@ defmodule PhiAccrual.Estimator do
 
   defp emit_phi(state) do
     now = state.clock_fn.()
-    result = Core.phi(state.core, now)
     paused? = PauseMonitor.paused?()
     elapsed = now - state.core.last_arrival_ts
 
-    status =
-      case result do
-        {:ok, _phi, s} -> s
-        {:insufficient_data, _} -> :insufficient_data
-        {:stale, _} -> :stale
+    {phi_value, status} =
+      case Core.phi(state.core, now) do
+        {:ok, phi, s} -> {phi, s}
+        {:insufficient_data, _} -> {0.0, :insufficient_data}
+        {:stale, _} -> {0.0, :stale}
       end
-
-    phi_value =
-      if state.core.samples_seen > 0,
-        do: Core.compute_phi(elapsed, state.core),
-        else: 0.0
 
     :telemetry.execute(
       [:phi_accrual, :phi, :computed],

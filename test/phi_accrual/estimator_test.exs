@@ -1,7 +1,7 @@
 defmodule PhiAccrual.EstimatorTest do
   use ExUnit.Case, async: false
 
-  alias PhiAccrual.Estimator
+  alias PhiAccrual.{Core, Estimator}
 
   setup do
     clock = start_supervised!({Agent, fn -> 0 end})
@@ -109,6 +109,104 @@ defmodule PhiAccrual.EstimatorTest do
     set_time(clock, 3_000)
 
     assert_receive {:event, ^ref, %{phi: _, elapsed_ms: _}, %{node: ^node, state: :steady}}, 500
+  end
+
+  test "tick emits phi: 0.0 and state: :insufficient_data when samples_seen < min_samples", %{
+    clock: clock
+  } do
+    clock_fn = fn -> Agent.get(clock, & &1) end
+
+    node = :"insuff_#{System.unique_integer([:positive])}@nohost"
+
+    {:ok, _pid} =
+      start_supervised(
+        {Estimator,
+         node: node,
+         core_opts: [
+           min_samples: 3,
+           initial_interval_ms: 1_000,
+           initial_std_dev_ms: 200,
+           min_std_dev_ms: 200
+         ],
+         clock_fn: clock_fn,
+         phi_tick_ms: 30},
+        id: {Estimator, node}
+      )
+
+    ref = attach_handler([:phi_accrual, :phi, :computed])
+
+    cast_observe(node, 0)
+    set_time(clock, 500)
+
+    assert_receive {:event, ^ref, %{phi: +0.0},
+                    %{node: ^node, state: :insufficient_data}},
+                   500
+  end
+
+  test "tick emits phi: 0.0 and state: :stale after stale_after_ms elapses", %{clock: clock} do
+    clock_fn = fn -> Agent.get(clock, & &1) end
+
+    node = :"stale_#{System.unique_integer([:positive])}@nohost"
+
+    {:ok, _pid} =
+      start_supervised(
+        {Estimator,
+         node: node,
+         core_opts: [
+           min_samples: 2,
+           stale_after_ms: 5_000,
+           initial_interval_ms: 1_000,
+           initial_std_dev_ms: 200,
+           min_std_dev_ms: 200
+         ],
+         clock_fn: clock_fn,
+         phi_tick_ms: 30},
+        id: {Estimator, node}
+      )
+
+    ref = attach_handler([:phi_accrual, :phi, :computed])
+
+    cast_observe(node, 0)
+    cast_observe(node, 1_000)
+    cast_observe(node, 2_000)
+    set_time(clock, 2_000 + 6_000)
+
+    assert_receive {:event, ^ref, %{phi: +0.0}, %{node: ^node, state: :stale}}, 500
+  end
+
+  test "tick emits phi equal to Core.phi/2 result (no double computation)", %{clock: clock} do
+    clock_fn = fn -> Agent.get(clock, & &1) end
+
+    node = :"steady_#{System.unique_integer([:positive])}@nohost"
+
+    {:ok, _pid} =
+      start_supervised(
+        {Estimator,
+         node: node,
+         core_opts: [
+           min_samples: 2,
+           initial_interval_ms: 1_000,
+           initial_std_dev_ms: 200,
+           min_std_dev_ms: 200
+         ],
+         clock_fn: clock_fn,
+         phi_tick_ms: 30},
+        id: {Estimator, node}
+      )
+
+    set_time(clock, 3_000)
+    cast_observe(node, 0)
+    cast_observe(node, 1_000)
+    cast_observe(node, 2_000)
+
+    ref = attach_handler([:phi_accrual, :phi, :computed])
+
+    assert_receive {:event, ^ref, %{phi: emitted}, %{node: ^node, state: :steady}}, 500
+
+    core = Estimator.core_state(node)
+    {:ok, expected, :steady} = Core.phi(core, 3_000)
+
+    assert abs(emitted - expected) < 1.0e-9
   end
 
   defp attach_handler(event) do
