@@ -341,6 +341,32 @@ Per-node estimator options (passed to `PhiAccrual.track/2`):
 | `:initial_interval_ms`       | `1_000`  | Prior mean before any observation             |
 | `:initial_std_dev_ms`        | `500`    | Prior σ (variance = σ²)                       |
 
+## Debugging in production
+
+When φ for a node looks wrong (stuck low, stuck high, or noisy in a
+way that doesn't match the heartbeat source), the fastest first step
+is to look at what the estimator currently believes:
+
+```elixir
+iex> PhiAccrual.inspect_state(:"node_a@host")
+%PhiAccrual.Core{
+  mean: 1023.4,
+  variance: 2_847.1,
+  last_arrival_ts: 1_234_567_890,
+  last_interval_ms: 1_017.0,
+  samples_seen: 42,
+  recovering_remaining: 0,
+  ...
+}
+```
+
+If `samples_seen` is below `min_samples`, you're still in bootstrap.
+If `mean` is far from the heartbeat period you expect, the source is
+either dropping samples or arriving in bursts. If `variance` is huge
+but intervals look stable, you've hit a single outlier — `alpha_var`
+is too high. `inspect_state/1` returns `{:error, :not_tracked}` for
+unknown nodes; do not use it on the hot path.
+
 ## Limitations
 
 Read these before wiring φ to anything that takes irreversible action.

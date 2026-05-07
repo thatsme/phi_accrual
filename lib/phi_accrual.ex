@@ -88,6 +88,18 @@ defmodule PhiAccrual do
   @spec phi(node()) :: phi_result() | {:error, :not_tracked}
   def phi(node), do: Estimator.phi(node)
 
+  @doc """
+  Return the current `PhiAccrual.Core` estimator state for `node`, or
+  `{:error, :not_tracked}` if the node is not tracked.
+
+  Intended for IEx introspection and debugging — inspect `mean`,
+  `variance`, `samples_seen`, `last_interval_ms`, and `last_arrival_ts`
+  to see what the estimator currently believes about a node. Not for
+  hot-path use.
+  """
+  @spec inspect_state(node()) :: Core.t() | {:error, :not_tracked}
+  defdelegate inspect_state(node), to: Estimator, as: :core_state
+
   defp cast_or_shed(pid, node, ts) do
     threshold = Application.get_env(:phi_accrual, :shed_threshold, @default_shed_threshold)
 

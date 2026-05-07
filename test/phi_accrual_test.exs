@@ -1,7 +1,7 @@
 defmodule PhiAccrualTest do
   use ExUnit.Case, async: false
 
-  alias PhiAccrual.{Clock, Estimator}
+  alias PhiAccrual.{Clock, Core, Estimator}
 
   defp unique_node, do: :"node_#{System.unique_integer([:positive])}@nohost"
 
@@ -54,6 +54,21 @@ defmodule PhiAccrualTest do
 
   test "phi of untracked node returns :not_tracked error" do
     assert {:error, :not_tracked} = PhiAccrual.phi(:"never_seen@nohost")
+  end
+
+  test "inspect_state returns the Core struct for tracked nodes, :not_tracked otherwise",
+       %{node: node} do
+    {:ok, _pid} = PhiAccrual.track(node)
+    :ok = PhiAccrual.observe(node)
+    # flush — make a sync call to guarantee the cast was processed
+    _ = Estimator.phi(node)
+
+    state = PhiAccrual.inspect_state(node)
+
+    assert %Core{} = state
+    assert is_integer(state.last_arrival_ts)
+
+    assert {:error, :not_tracked} = PhiAccrual.inspect_state(:"never_seen@nohost")
   end
 
   test "observe + phi over time produces a :steady reading", %{node: node} do
