@@ -7,8 +7,8 @@ defmodule PhiAccrual.Source.DistributionPing do
   blocking**: if the distribution TCP send buffer to a peer is full
   (see `:busy_dist_port` in `PhiAccrual.PauseMonitor`), pings queue
   behind user traffic. That is why v1 is observability-grade rather
-  than decision-grade. A future `UdpSource` escapes HoL by using its
-  own socket.
+  than decision-grade. The planned `phi_accrual_udp` companion package
+  escapes HoL by using its own socket.
 
   ## Cost
 

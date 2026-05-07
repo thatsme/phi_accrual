@@ -118,7 +118,8 @@ at 50 nodes and 1 s interval that's 2 500 pings/second of distribution
 traffic.
 
 **This source inherits HoL blocking** — see
-[limitations](#limitations). The v2 `UdpSource` will escape it.
+[limitations](#limitations). The planned `phi_accrual_udp` companion
+package escapes it by using a dedicated socket.
 
 ## What happens when a node fails
 
@@ -377,8 +378,9 @@ with user traffic. A large GenServer reply or `:pg` broadcast can
 delay heartbeats for arbitrary periods. `PauseMonitor` subscribes to
 `:busy_dist_port` so you can *observe* this (pause telemetry +
 `confidence: false` on φ events), but the underlying problem cannot be
-fixed by this library while the source is distribution-based. The v2
-`UdpSource` solves it by using a dedicated socket.
+fixed by this library while the source is distribution-based. The
+planned `phi_accrual_udp` companion package solves it by using a
+dedicated socket.
 
 **Local-pause suppression is best-effort.** `:erlang.system_monitor`
 fires on `:long_gc`, `:long_schedule`, and `:busy_dist_port`. The
@@ -412,7 +414,8 @@ Failure detectors are hard to test against wall-clock. This project:
 * Injects clocks into `PhiAccrual.Estimator` via the `:clock_fn`
   option — no `Process.sleep` in unit tests.
 * Integration tests against live distribution (`:peer`-based,
-  multi-node) are planned for v2 alongside the `UdpSource` work.
+  multi-node) are planned alongside the `phi_accrual_udp` companion
+  package work.
 
 ## Versioning
 
@@ -432,13 +435,29 @@ may be tuned within v1.x.
 - Optional `Threshold` module with hysteresis
 - Committed telemetry event schema
 
-### v2 (planned)
+### Companion packages (separate repos)
 
-- `UdpSource` — dedicated UDP socket for heartbeats, escapes HoL,
-  makes the detector decision-grade
+The core detector is intentionally transport-agnostic. Heartbeat
+transports and integrations live in their own packages, depending on
+`phi_accrual` as a normal Hex dependency:
+
+- **`phi_accrual_udp`** — dedicated UDP socket source, escapes BEAM
+  distribution head-of-line blocking. Required to make the detector
+  decision-grade for any consumer that needs it. *(planned, not yet
+  published.)*
+- **`phi_accrual_libcluster`** — `libcluster` strategy adapter for
+  apps that want a one-line membership + detection wiring.
+  *(planned.)*
+
+Anyone is free to write additional companion packages — the public
+API is stable, the contract is `PhiAccrual.observe/2`.
+
+### Future core work
+
 - Evidence-based evaluation of non-parametric / mixture estimators
-- `:peer`-based multi-node integration tests
-- Optional `phi_accrual_libcluster` companion package
+  for bimodal BEAM-GC inter-arrival distributions, once we have real
+  traces from deployments.
+- `:peer`-based multi-node integration tests for `DistributionPing`.
 
 ### Related ideas
 
