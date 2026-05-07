@@ -4,11 +4,10 @@ A source-agnostic φ-accrual failure detector for Elixir/OTP, built on
 Hayashibara et al. 2004 with a dual-α EWMA estimator, head-of-line and
 local-pause awareness, and a telemetry-first API.
 
-> ⚠️ **Alpha — `v0.1.x`.** The API and configuration surface may change
-> before `v1.0`. The **telemetry event schema is already stable** (see
-> [Versioning](#versioning)), but everything else is subject to tuning
-> based on real-deployment feedback. Production use at your own risk;
-> please open issues as you find rough edges.
+> **Stable — `v1.x`.** Public API and telemetry event schema are
+> committed under [SemVer](https://semver.org/). Per-node estimator
+> option defaults may be tuned within `v1.x`; breaking changes only
+> in `v2.0.0`. See [Versioning](#versioning) for the full contract.
 
 > **Observability-grade, not decision-grade.** Designed for dashboards,
 > alerting, and operator intuition — not for automated routing, quorum,
@@ -19,7 +18,7 @@ local-pause awareness, and a telemetry-first API.
 ```elixir
 # mix.exs
 def deps do
-  [{:phi_accrual, "~> 0.1"}]
+  [{:phi_accrual, "~> 1.0"}]
 end
 ```
 

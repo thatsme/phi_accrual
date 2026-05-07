@@ -11,6 +11,27 @@ changes only in `v2.0.0`. See the README for the committed schema.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-07
+
+### Added
+
+- `PhiAccrual.inspect_state/1` for IEx introspection — delegates to
+  `PhiAccrual.Estimator.core_state/1`.
+
+### Changed
+
+- `[:phi_accrual, :phi, :computed]` now emits `phi: 0.0` when state is
+  `:insufficient_data` or `:stale`, instead of a recomputed-but-not-
+  meaningful φ value. Pre-1.0 contract clarification — schema shape
+  unchanged.
+
+### Notes
+
+The roadmap has shifted: the previously-planned in-tree `UdpSource` is
+now scoped as a separate package, `phi_accrual_udp`. The core stays
+transport-agnostic. See README "Companion packages" for the current
+direction.
+
 ## [0.1.0] - 2026-04-20
 
 Initial public release. **Alpha** — the API may change before `v1.0`.
@@ -64,5 +85,6 @@ tuning based on real-deployment feedback.
 - Multi-node `:peer`-based integration tests.
 - `phi_accrual_libcluster` companion package.
 
-[Unreleased]: https://github.com/thatsme/phi_accrual/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/thatsme/phi_accrual/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/thatsme/phi_accrual/releases/tag/v1.0.0
 [0.1.0]: https://github.com/thatsme/phi_accrual/releases/tag/v0.1.0
