@@ -11,6 +11,26 @@ changes only in `v2.0.0`. See the README for the committed schema.
 
 ## [Unreleased]
 
+### Changed
+
+- Public-API type signatures (`track/2`, `untrack/1`, `observe/1,2`,
+  `phi/1`, `inspect_state/1`, and the internal `Estimator`/
+  `EstimatorSupervisor` specs) widened from `node()` to a new
+  `t:PhiAccrual.detector_key/0` type (`node() | term()`). The detector
+  has always been documented as source-agnostic and the code has
+  always accepted any `Registry`-keyable term; this aligns the
+  typespecs with the documented and actual behaviour. **Non-breaking**
+  — `node()` is a subset of the new type, every existing caller still
+  type-checks. No telemetry schema change; the metadata key `node` is
+  unchanged (its value may now be a non-node term, which is intended).
+
+### Added
+
+- `t:PhiAccrual.detector_key/0` typedoc — documents that a monitored
+  entity may be a `node()` (the `DistributionPing` case) or any term
+  (transport companion packages such as `phi_accrual_udp` and
+  `phi_accrual_amqp`).
+
 ## [1.0.0] - 2026-05-07
 
 ### Added

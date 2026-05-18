@@ -31,7 +31,8 @@ defmodule PhiAccrual.MixProject do
     [
       {:telemetry, "~> 1.2"},
       {:stream_data, "~> 1.1", only: [:test, :dev]},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev], runtime: false}
     ]
   end
 

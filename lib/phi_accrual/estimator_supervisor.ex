@@ -28,7 +28,7 @@ defmodule PhiAccrual.EstimatorSupervisor do
   @doc """
   Start tracking `node`. Returns the existing pid if already tracked.
   """
-  @spec track(node(), keyword()) :: {:ok, pid()} | {:error, term()}
+  @spec track(PhiAccrual.detector_key(), keyword()) :: {:ok, pid()} | {:error, term()}
   def track(node, core_opts \\ []) do
     spec = {Estimator, [node: node, core_opts: core_opts]}
 
@@ -42,7 +42,7 @@ defmodule PhiAccrual.EstimatorSupervisor do
   @doc """
   Stop tracking `node`. No-op if the node is not tracked.
   """
-  @spec untrack(node()) :: :ok
+  @spec untrack(PhiAccrual.detector_key()) :: :ok
   def untrack(node) do
     case Estimator.whereis(node) do
       nil -> :ok
@@ -51,7 +51,7 @@ defmodule PhiAccrual.EstimatorSupervisor do
   end
 
   @doc "List every node currently tracked by an estimator."
-  @spec tracked_nodes() :: [node()]
+  @spec tracked_nodes() :: [PhiAccrual.detector_key()]
   def tracked_nodes do
     Registry.select(PhiAccrual.Registry, [{{:"$1", :_, :_}, [], [:"$1"]}])
   end

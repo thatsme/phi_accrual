@@ -100,6 +100,12 @@ Call `PhiAccrual.track(node, opts)` **before** your first `observe` if
 you need custom per-node estimator options; otherwise the first
 `observe` auto-tracks with defaults.
 
+The monitored key is an Erlang `node()` when fed by `DistributionPing`,
+but the detector treats the key opaquely and accepts any term — a
+string, a tuple, an atom. Transport companion packages such as
+`phi_accrual_udp` pass non-node keys through `observe/2` without
+issue. See `t:PhiAccrual.detector_key/0` for the contract.
+
 ## Usage — reference source
 
 If you have no existing cross-node chatter, enable the bundled
@@ -117,7 +123,7 @@ at 50 nodes and 1 s interval that's 2 500 pings/second of distribution
 traffic.
 
 **This source inherits HoL blocking** — see
-[limitations](#limitations). The planned `phi_accrual_udp` companion
+[limitations](#limitations). The `phi_accrual_udp` companion
 package escapes it by using a dedicated socket.
 
 ## What happens when a node fails
@@ -378,7 +384,7 @@ delay heartbeats for arbitrary periods. `PauseMonitor` subscribes to
 `:busy_dist_port` so you can *observe* this (pause telemetry +
 `confidence: false` on φ events), but the underlying problem cannot be
 fixed by this library while the source is distribution-based. The
-planned `phi_accrual_udp` companion package solves it by using a
+`phi_accrual_udp` companion package solves it by using a
 dedicated socket.
 
 **Local-pause suppression is best-effort.** `:erlang.system_monitor`
@@ -442,8 +448,8 @@ transports and integrations live in their own packages, depending on
 
 - **`phi_accrual_udp`** — dedicated UDP socket source, escapes BEAM
   distribution head-of-line blocking. Required to make the detector
-  decision-grade for any consumer that needs it. *(planned, not yet
-  published.)*
+  decision-grade for any consumer that needs it. Available on Hex:
+  `{:phi_accrual_udp, "~> 1.0"}`.
 - **`phi_accrual_libcluster`** — `libcluster` strategy adapter for
   apps that want a one-line membership + detection wiring.
   *(planned.)*

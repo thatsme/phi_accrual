@@ -24,6 +24,11 @@ defmodule PhiAccrual do
   `observe/1` auto-tracks unknown nodes with default settings — call
   `track/2` first if you want custom per-node estimator options.
 
+  The monitored key is an Erlang `node()` when fed by the bundled
+  `DistributionPing` source, but the detector treats the key opaquely
+  and accepts any term — see `t:detector_key/0` for the contract used
+  by non-distribution transport companion packages.
+
   ## Overload behaviour
 
   `observe/2` is bounded: if the target estimator's mailbox exceeds
@@ -38,6 +43,25 @@ defmodule PhiAccrual do
 
   @default_shed_threshold 10_000
 
+  @typedoc """
+  Identity of a monitored entity.
+
+  Historically this was always an Erlang `node()`, and for the bundled
+  `DistributionPing` source it still is. Transport companion packages
+  (`phi_accrual_udp`, `phi_accrual_amqp`, ...) monitor entities that are
+  not BEAM nodes — a UDP peer, an AMQP routing key — so the key may be
+  any term: a string, a tuple, an atom.
+
+  The detector treats the key opaquely: it is a `Registry` key and a
+  telemetry metadata value, nothing more. Two rules apply:
+
+    * the key must be a valid `Registry` key (any term is — no constraint
+      in practice), and
+    * the same term must be used consistently for `track/2`, `observe/2`,
+      `phi/1`, and `untrack/1` for a given entity.
+  """
+  @type detector_key :: node() | term()
+
   @type phi_result :: Core.phi_result()
 
   @doc """
@@ -45,22 +69,22 @@ defmodule PhiAccrual do
 
   `core_opts` are forwarded to `PhiAccrual.Core.new/1`.
   """
-  @spec track(node(), keyword()) :: {:ok, pid()} | {:error, term()}
+  @spec track(detector_key(), keyword()) :: {:ok, pid()} | {:error, term()}
   def track(node, core_opts \\ []), do: EstimatorSupervisor.track(node, core_opts)
 
   @doc "Stop tracking `node`. No-op if the node is not tracked."
-  @spec untrack(node()) :: :ok
+  @spec untrack(detector_key()) :: :ok
   def untrack(node), do: EstimatorSupervisor.untrack(node)
 
   @doc "List all currently-tracked nodes."
-  @spec tracked_nodes() :: [node()]
+  @spec tracked_nodes() :: [detector_key()]
   def tracked_nodes, do: EstimatorSupervisor.tracked_nodes()
 
   @doc """
   Record a heartbeat arrival for `node` at the current monotonic time.
   Auto-tracks the node with default options if not already tracked.
   """
-  @spec observe(node()) :: :ok
+  @spec observe(detector_key()) :: :ok
   def observe(node), do: observe(node, Clock.now())
 
   @doc """
@@ -70,7 +94,7 @@ defmodule PhiAccrual do
   Cross-node timestamps are meaningless for the detector and must never
   enter interval calculations.
   """
-  @spec observe(node(), integer()) :: :ok
+  @spec observe(detector_key(), integer()) :: :ok
   def observe(node, ts) when is_integer(ts) do
     case Estimator.whereis(node) do
       nil ->
@@ -85,7 +109,7 @@ defmodule PhiAccrual do
   @doc """
   Current φ for `node`. See `t:PhiAccrual.Core.phi_result/0`.
   """
-  @spec phi(node()) :: phi_result() | {:error, :not_tracked}
+  @spec phi(detector_key()) :: phi_result() | {:error, :not_tracked}
   def phi(node), do: Estimator.phi(node)
 
   @doc """
@@ -97,7 +121,7 @@ defmodule PhiAccrual do
   to see what the estimator currently believes about a node. Not for
   hot-path use.
   """
-  @spec inspect_state(node()) :: Core.t() | {:error, :not_tracked}
+  @spec inspect_state(detector_key()) :: Core.t() | {:error, :not_tracked}
   defdelegate inspect_state(node), to: Estimator, as: :core_state
 
   defp cast_or_shed(pid, node, ts) do

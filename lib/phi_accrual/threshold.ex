@@ -22,7 +22,7 @@ defmodule PhiAccrual.Threshold do
     * `[:phi_accrual, :threshold, :recovered]` when φ crosses
       `recover_at` from above.
 
-  Both events include `%{node: node(), instance: name, threshold: ...}`
+  Both events include `%{node: PhiAccrual.detector_key(), instance: name, threshold: ...}`
   in metadata. The `instance` tag lets you disambiguate multiple
   threshold modules sharing the same event namespace.
 

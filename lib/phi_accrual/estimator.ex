@@ -3,7 +3,7 @@ defmodule PhiAccrual.Estimator do
   Per-node estimator GenServer.
 
   Each monitored node has its own estimator process, registered in
-  `PhiAccrual.Registry` under the node atom and supervised under
+  `PhiAccrual.Registry` under the detector key and supervised under
   `PhiAccrual.EstimatorSupervisor`. Isolating per-node state means
   one slow node's scheduling hiccups cannot block observations for
   other nodes — a single shared GenServer would serialise every
@@ -26,7 +26,7 @@ defmodule PhiAccrual.Estimator do
   @default_phi_tick_ms 1_000
 
   @type start_opts :: [
-          node: node(),
+          node: PhiAccrual.detector_key(),
           core_opts: keyword(),
           clock_fn: (-> integer()),
           phi_tick_ms: pos_integer() | nil
@@ -58,13 +58,14 @@ defmodule PhiAccrual.Estimator do
   end
 
   @doc false
-  @spec via(node()) :: {:via, Registry, {PhiAccrual.Registry, node()}}
+  @spec via(PhiAccrual.detector_key()) ::
+          {:via, Registry, {PhiAccrual.Registry, PhiAccrual.detector_key()}}
   def via(node), do: {:via, Registry, {PhiAccrual.Registry, node}}
 
   @doc """
   Return the pid of the estimator tracking `node`, or `nil` if not tracked.
   """
-  @spec whereis(node()) :: pid() | nil
+  @spec whereis(PhiAccrual.detector_key()) :: pid() | nil
   def whereis(node) do
     case Registry.lookup(PhiAccrual.Registry, node) do
       [{pid, _}] -> pid
@@ -76,7 +77,7 @@ defmodule PhiAccrual.Estimator do
   Lower-level φ query. Most callers should use `PhiAccrual.phi/1` instead,
   which forwards here via the Registry.
   """
-  @spec phi(node()) :: Core.phi_result() | {:error, :not_tracked}
+  @spec phi(PhiAccrual.detector_key()) :: Core.phi_result() | {:error, :not_tracked}
   def phi(node) do
     case whereis(node) do
       nil -> {:error, :not_tracked}
@@ -88,7 +89,7 @@ defmodule PhiAccrual.Estimator do
   Return the current `PhiAccrual.Core` estimator state for `node`. Intended
   for debugging and introspection — not for hot-path use.
   """
-  @spec core_state(node()) :: Core.t() | {:error, :not_tracked}
+  @spec core_state(PhiAccrual.detector_key()) :: Core.t() | {:error, :not_tracked}
   def core_state(node) do
     case whereis(node) do
       nil -> {:error, :not_tracked}
