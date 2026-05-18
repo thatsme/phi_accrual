@@ -11,6 +11,8 @@ changes only in `v2.0.0`. See the README for the committed schema.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-18
+
 ### Changed
 
 - Public-API type signatures (`track/2`, `untrack/1`, `observe/1,2`,
@@ -105,6 +107,7 @@ tuning based on real-deployment feedback.
 - Multi-node `:peer`-based integration tests.
 - `phi_accrual_libcluster` companion package.
 
-[Unreleased]: https://github.com/thatsme/phi_accrual/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/thatsme/phi_accrual/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/thatsme/phi_accrual/releases/tag/v1.1.0
 [1.0.0]: https://github.com/thatsme/phi_accrual/releases/tag/v1.0.0
 [0.1.0]: https://github.com/thatsme/phi_accrual/releases/tag/v0.1.0
